@@ -12,7 +12,8 @@ class SocketManager {
     if (this.socket) return this.socket;
     const token = getToken();
     if (!token) return null;
-    this.socket = io('/', {
+    const baseUrl = import.meta.env.VITE_API_URL || '/';
+    this.socket = io(baseUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,

@@ -1,26 +1,26 @@
 /* ============ Theme tokens ============ */
 :root,
 :root[data-theme='dark'] {
-  --bg: #0b0f1a;
-  --bg-soft: #111827;
-  --bg-elev: #1a2130;
-  --bg-elev-2: #232c40;
-  --surface: rgba(255, 255, 255, 0.04);
-  --surface-strong: rgba(255, 255, 255, 0.08);
+  --bg: #151226;
+  --bg-soft: #1e1936;
+  --bg-elev: #282145;
+  --bg-elev-2: #322956;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-strong: rgba(255, 255, 255, 0.1);
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #f3f5fa;
-  --text-dim: #aab2c5;
-  --text-faint: #6b7590;
-  --accent: #7c5cff;
-  --accent-2: #4f7df9;
-  --accent-grad: linear-gradient(135deg, #7c5cff 0%, #4f7df9 100%);
+  --text: #ffffff;
+  --text-dim: #c4b5fd;
+  --text-faint: #8b5cf6;
+  --accent: #a855f7;
+  --accent-2: #06b6d4;
+  --accent-grad: linear-gradient(135deg, #d946ef 0%, #8b5cf6 40%, #06b6d4 80%, #10b981 100%);
   --gold: #f5b93d;
-  --green: #34c98a;
-  --red: #ff5c6c;
+  --green: #10b981;
+  --red: #f43f5e;
   --orange: #f5a623;
-  --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow: 0 12px 40px rgba(12, 10, 22, 0.6);
+  --shadow-soft: 0 4px 20px rgba(12, 10, 22, 0.4);
   --radius: 16px;
   --radius-sm: 10px;
   --radius-lg: 24px;
@@ -140,9 +140,9 @@ textarea {
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(600px 400px at 12% -10%, rgba(124, 92, 255, 0.18), transparent 60%),
-    radial-gradient(700px 500px at 100% 0%, rgba(79, 125, 249, 0.14), transparent 55%),
-    radial-gradient(800px 600px at 50% 120%, rgba(52, 201, 138, 0.07), transparent 55%);
+    radial-gradient(600px 400px at 12% -10%, rgba(168, 85, 247, 0.22), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, rgba(6, 182, 212, 0.18), transparent 55%),
+    radial-gradient(800px 600px at 50% 120%, rgba(217, 70, 239, 0.12), transparent 55%);
 }
 
 [data-theme='light'] .ambient {
@@ -183,7 +183,7 @@ textarea {
   display: grid;
   place-items: center;
   font-size: 20px;
-  box-shadow: 0 6px 18px rgba(124, 92, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
 }
 
 .brand-name {
