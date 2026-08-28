@@ -104,7 +104,7 @@ const won = computed(() => myResult.value?.result === 'win');
           class="seat"
           :class="{ active: p.seat === room.matchState?.meta?.currentSeat && room.matchState?.meta?.status === 'running' }"
         >
-          <span class="s-emo">{{ p.avatar || '👤' }}</span>
+          <span class="s-emo">{{ p.id?.charCodeAt(0) % 2 === 0 ? '👨' : '👩' }}</span>
           <span>{{ p.username }}<span v-if="p.id === auth.user?.id"> ({{ t('room.you') }})</span></span>
           <span v-if="p.seat === room.mySeat && room.matchState?.meta?.status !== 'running'" style="color: var(--red)">●</span>
         </div>

@@ -174,7 +174,7 @@ function leave() {
         <div class="section-title"><span class="emo">👥</span> {{ t('room.players') }} ({{ room.players.length }}/{{ room.room?.maxPlayers }})</div>
         <div class="list mb-16">
           <div v-for="p in sortedPlayers" :key="p.id" class="player-row">
-            <span style="font-size: 30px">{{ p.avatar || '👤' }}</span>
+            <span style="font-size: 30px">{{ p.id?.charCodeAt(0) % 2 === 0 ? '👨' : '👩' }}</span>
             <div class="p-info">
               <div class="p-name">
                 {{ p.username }}
@@ -229,7 +229,7 @@ function leave() {
     <Modal v-if="inviteOpen" :title="t('room.invite')" :sub="t('room.inviteHint')" @close="inviteOpen = false">
       <div v-if="friendList.length">
         <div v-for="f in friendList" :key="f.id" class="friend-invite">
-          <span style="font-size: 22px">{{ f.avatar || '👤' }}</span>
+          <span style="font-size: 22px">{{ f.id?.charCodeAt(0) % 2 === 0 ? '👨' : '👩' }}</span>
           <div class="fi-name">{{ f.username }} <span v-if="f.online" class="inv-online">● online</span></div>
           <button
             class="btn btn-sm btn-primary"

@@ -7,7 +7,7 @@ const props = defineProps({
   online: { type: [Boolean, null], default: null },
 });
 
-const emo = computed(() => props.user?.avatar || '👤');
+const emo = computed(() => props.user?.id ? (props.user.id.charCodeAt(0) % 2 === 0 ? '👨' : '👩') : '👤');
 const cls = computed(() => ({ lg: props.size === 'lg', sm: props.size === 'sm' }));
 </script>
 
