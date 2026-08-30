@@ -9,7 +9,7 @@ import { roomsService } from './service.js';
 import { gamesService } from '../games/service.js';
 
 export class RoomSession {
-  constructor({ id, code, gameCode, name, isPrivate, password, hostId, settings, io }) {
+  constructor({ id, code, gameCode, name, isPrivate, password, hostId, status, settings, io, onClose }) {
     this.id = id;
     this.code = code;
     this.gameCode = gameCode;
@@ -19,7 +19,8 @@ export class RoomSession {
     this.hostId = hostId;
     this.settings = settings || {};
     this.io = io;
-    this.status = 'waiting'; // waiting | playing | finished
+    this.onClose = onClose;
+    this.status = status || 'waiting'; // waiting | playing | finished
     this.players = new Map(); // userId -> { seat, team, ready, user }
     this.match = null;
     this.sockets = new Map(); // socketId -> userId
@@ -145,7 +146,10 @@ export class RoomSession {
          ORDER BY RANDOM() LIMIT 1`
       )
       .get(...existingIds);
-    if (!row) throw new Error('NO_BOTS_AVAILABLE');
+    if (!row) {
+      logger.error('No bots available for room', { roomCode: this.code, gameCode: this.gameCode });
+      throw new Error('NO_BOTS_AVAILABLE');
+    }
     const team = ['baloot'].includes(this.gameCode) ? (seat % 2) : this.gameCode === 'carrom' && game.maxPlayers === 4 ? (seat % 2) : 0;
     this.players.set(String(row.id), { seat, team, ready: true, user: { id: row.id, username: row.username, avatar: row.avatar, is_bot: true } });
     db.prepare('INSERT INTO room_players (room_id, user_id, seat, team, is_ready) VALUES (?,?,?,?,1)').run(this.id, row.id, seat, team);
@@ -241,6 +245,7 @@ export class RoomSession {
   destroy() {
     db.prepare('DELETE FROM rooms WHERE id=?').run(this.id);
     this.io.to(`room:${this.code}`).emit('room:closed', { code: this.code });
+    if (this.onClose) this.onClose(this.code);
     logger.info('Room destroyed', { code: this.code });
   }
 }

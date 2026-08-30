@@ -13,7 +13,7 @@ const geo = computed(() => st.value.geometry || { H: 37, R: 1.6, SR: 2.1, POCKET
 const SCALE = 7.2;
 const HALF = geo.value.H * SCALE;
 const SIZE = HALF * 2;
-const MARGIN = 30;
+const MARGIN = 35;
 const W = SIZE + MARGIN * 2;
 
 const myTeam = computed(() => {
@@ -23,25 +23,19 @@ const myTeam = computed(() => {
 const isMyTurn = computed(() => meta.value?.status === 'running' && st.value.shooter === mySeat.value);
 const isMyTeamTurn = computed(() => meta.value?.status === 'running' && myTeam.value === (st.value.currentTeam ?? 0));
 
-// angles in radians (matching engine). 0 -> +x (right), +90deg -> up on the board.
 const angle = ref(0);
 const power = ref(0.5);
 const aimLocked = ref(false);
 
 const COINS = computed(() => Object.assign({ queen: [] }, st.value.coins));
 
-// server coords -> svg coords (y flips so +y is up on the board)
 function ccx(c) { return MARGIN + (geo.value.H + (c?.x ?? 0)) * SCALE; }
 function ccy(c) { return MARGIN + (geo.value.H - (c?.y ?? 0)) * SCALE; }
 
-const pocketPositions = [
-  [1, 1], [1, -1], [-1, 1], [-1, -1],
-  [0, 1], [0, -1], [1, 0], [-1, 0],
-];
+const pocketPositions = [ [1, 1], [1, -1], [-1, 1], [-1, -1] ];
 function pkx(p) { return MARGIN + (geo.value.H + p[0] * geo.value.H) * SCALE; }
 function pky(p) { return MARGIN + (geo.value.H - p[1] * geo.value.H) * SCALE; }
 
-// end of the aim arrow (screen space)
 const aimEnd = computed(() => {
   const s = st.value.striker || { x: 0, y: 0 };
   const sx = ccx(s), sy = ccy(s);
@@ -57,6 +51,7 @@ function shoot() {
   angle.value = 0; power.value = 0.5;
 }
 </script>
+
 <template>
   <div class="carrom-view">
     <div class="hud">
@@ -67,82 +62,136 @@ function shoot() {
       </div>
       <div class="turn">
         <span v-if="isMyTurn" class="pill turn-me">{{ t('game.yourTurn') }}</span>
-        <span v-else-if="isMyTeamTurn" class="pill">{{ t('match.opponentTurn') }}</span>
         <span v-else-if="st.winner != null" class="pill pill-cat">{{ t('match.finished') }}</span>
       </div>
     </div>
 
-    <svg :width="W" :height="W" class="board" :viewBox="`0 0 ${W} ${W}`" aria-label="Carrom board">
-      <defs>
-        <radialGradient id="wood" cx="50%" cy="40%" r="80%"><stop offset="0%" stop-color="#cd9449"/><stop offset="100%" stop-color="#8a5a24"/></radialGradient>
-        <radialGradient id="felt" cx="45%" cy="42%" r="75%"><stop offset="0%" stop-color="#2f9e44"/><stop offset="100%" stop-color="#187331"/></radialGradient>
-        <radialGradient id="hole" cx="40%" cy="40%" r="75%"><stop offset="0%" stop-color="#000"/><stop offset="100%" stop-color="#222"/></radialGradient>
-        <radialGradient id="striker" cx="35%" cy="30%" r="80%"><stop offset="0%" stop-color="#fff6d8"/><stop offset="100%" stop-color="#d8b54a"/></radialGradient>
-        <radialGradient id="queen" cx="35%" cy="30%" r="80%"><stop offset="0%" stop-color="#ff8fa3"/><stop offset="100%" stop-color="#c2185b"/></radialGradient>
-      </defs>
+    <div class="board-frame">
+      <svg :width="W" :height="W" class="board" :viewBox="`0 0 ${W} ${W}`">
+        <defs>
+          <radialGradient id="woodGrad" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stop-color="#e2b492" />
+            <stop offset="100%" stop-color="#c6906f" />
+          </radialGradient>
+          <radialGradient id="frameGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#6d4c41" />
+            <stop offset="100%" stop-color="#3e2723" />
+          </radialGradient>
+          <radialGradient id="coinWhite" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#d7ccc8" />
+          </radialGradient>
+          <radialGradient id="coinBlack" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#4e342e" />
+            <stop offset="100%" stop-color="#1b1b1b" />
+          </radialGradient>
+          <radialGradient id="coinQueen" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#ff5252" />
+            <stop offset="100%" stop-color="#b71c1c" />
+          </radialGradient>
+          <radialGradient id="strikerGrad" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#ffe082" />
+            <stop offset="100%" stop-color="#f57f17" />
+          </radialGradient>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+            <feOffset dx="1" dy="2" />
+            <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
 
-      <rect :width="W" :height="W" rx="18" fill="url(#wood)"/>
-      <rect :x="MARGIN-6" :y="MARGIN-6" :width="SIZE+12" :height="SIZE+12" fill="#6b3f16" stroke="#4a2608" stroke-width="2"/>
-      <rect :x="MARGIN" :y="MARGIN" :width="SIZE" :height="SIZE" fill="url(#felt)"/>
+        <!-- Outer Frame -->
+        <rect x="0" y="0" :width="W" :height="W" rx="20" fill="url(#frameGrad)" />
+        <rect :x="5" :y="5" :width="W-10" :height="W-10" rx="18" fill="none" stroke="#2a1b15" stroke-width="2" />
 
-      <polygon :points="`${MARGIN+HALF*0.04},${MARGIN+HALF*0.50} ${MARGIN+HALF*0.40},${MARGIN+HALF*0.04} ${MARGIN+HALF*0.46},${MARGIN+HALF*0.04} ${MARGIN+HALF*0.10},${MARGIN+HALF*0.50}`" fill="rgba(255,255,255,0.07)"/>
-      <line :x1="MARGIN+HALF*0.18" :y1="MARGIN+HALF*0.72" :x2="MARGIN+HALF*0.82" :y2="MARGIN+HALF*0.72" stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/>
-      <line :x1="MARGIN+HALF*0.72" :y1="MARGIN+HALF*0.18" :x2="MARGIN+HALF*0.28" :y2="MARGIN+HALF*0.82" stroke="rgba(255,255,255,0.22)" stroke-width="1.6"/>
+        <!-- Pockets Background -->
+        <circle v-for="(p,i) in pocketPositions" :key="'pkb'+i" :cx="pkx(p)" :cy="pky(p)" :r="geo.POCKET_R*SCALE + 12" fill="#2a1b15" />
 
-      <g :transform="`translate(${SIZE/2+MARGIN},${SIZE/2+MARGIN})`">
-        <circle r="HALF*0.26" fill="none" stroke="rgba(255,255,255,0.30)" stroke-width="2.5"/>
-        <circle r="HALF*0.10" fill="rgba(255,255,255,0.18)"/>
-        <path d="M 0,-10 L 8,26 L -8,26 Z" fill="rgba(255,255,255,0.42)"/>
-        <circle r="HALF*0.26" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="1" stroke-dasharray="9 7 3 7"/>
-      </g>
+        <!-- Main Wood Board -->
+        <rect :x="MARGIN" :y="MARGIN" :width="SIZE" :height="SIZE" fill="url(#woodGrad)" />
+        <rect :x="MARGIN" :y="MARGIN" :width="SIZE" :height="SIZE" fill="none" stroke="#5d4037" stroke-width="1.5" />
 
-      <g>
-        <circle v-for="(p,i) in pocketPositions" :key="'pk'+i" :cx="pkx(p)" :cy="pky(p)" :r="geo.POCKET_R*SCALE" fill="url(#hole)" stroke="#0c2410" stroke-width="2"/>
-      </g>
+        <!-- Center Circles -->
+        <circle :cx="W/2" :cy="W/2" :r="SCALE * 14" fill="none" stroke="#5d4037" stroke-width="1" opacity="0.6" />
+        <circle :cx="W/2" :cy="W/2" :r="SCALE * 13.5" fill="none" stroke="#5d4037" stroke-width="1" opacity="0.3" />
 
-      <g>
-        <circle v-for="c in (COINS.white||[]).filter(x=>!x.pocketed)" :key="'w'+c.id" :cx="ccx(c)" :cy="ccy(c)" :r="geo.R*SCALE*0.9" fill="#f7f5ea" stroke="#b9b2a0" stroke-width="1.4"/>
-        <circle v-for="c in (COINS.black||[]).filter(x=>!x.pocketed)" :key="'b'+c.id" :cx="ccx(c)" :cy="ccy(c)" :r="geo.R*SCALE*0.9" fill="#3a3a42" stroke="#17171c" stroke-width="1.4"/>
-      </g>
+        <!-- Striker Lines (Baselines) -->
+        <g v-for="i in 4" :key="'line'+i" :transform="`rotate(${(i-1)*90}, ${W/2}, ${W/2})`">
+          <rect :x="MARGIN + SCALE*6" :y="W - MARGIN - SCALE*6" :width="SIZE - SCALE*12" :height="SCALE*2.5" rx="8" fill="none" stroke="#5d4037" stroke-width="1" opacity="0.5" />
+          <circle :cx="MARGIN + SCALE*6" :cy="W - MARGIN - SCALE*4.75" :r="SCALE*2.5" fill="#d32f2f" opacity="0.2" />
+          <circle :cx="W - MARGIN - SCALE*6" :cy="W - MARGIN - SCALE*4.75" :r="SCALE*2.5" fill="#d32f2f" opacity="0.2" />
+          <circle :cx="MARGIN + SCALE*6" :cy="W - MARGIN - SCALE*4.75" :r="SCALE*2" fill="none" stroke="#5d4037" stroke-width="1" />
+          <circle :cx="W - MARGIN - SCALE*6" :cy="W - MARGIN - SCALE*4.75" :r="SCALE*2" fill="none" stroke="#5d4037" stroke-width="1" />
+        </g>
 
-      <circle v-if="!COINS.queen?.pocketed" :cx="ccx(COINS.queen)" :cy="ccy(COINS.queen)" :r="geo.R*SCALE*0.9" fill="url(#queen)" stroke="#8d1040" stroke-width="1.6"/>
+        <!-- Pockets (Holes) -->
+        <circle v-for="(p,i) in pocketPositions" :key="'pk'+i" :cx="pkx(p)" :cy="pky(p)" :r="geo.POCKET_R*SCALE" fill="#000" />
 
-      <circle :cx="ccx(st.striker)" :cy="ccy(st.striker)" :r="geo.SR*SCALE*0.92" fill="url(#striker)" stroke="#a8842c" stroke-width="2"/>
+        <!-- Coins -->
+        <g filter="url(#softShadow)">
+          <circle v-for="c in (COINS.white||[]).filter(x=>!x.pocketed)" :key="'w'+c.id" :cx="ccx(c)" :cy="ccy(c)" :r="geo.R*SCALE*0.9" fill="url(#coinWhite)" stroke="#bcaaa4" stroke-width="0.5" />
+          <circle v-for="c in (COINS.black||[]).filter(x=>!x.pocketed)" :key="'b'+c.id" :cx="ccx(c)" :cy="ccy(c)" :r="geo.R*SCALE*0.9" fill="url(#coinBlack)" stroke="#3e2723" stroke-width="0.5" />
+          <circle v-if="!COINS.queen?.pocketed" :cx="ccx(COINS.queen)" :cy="ccy(COINS.queen)" :r="geo.R*SCALE*0.9" fill="url(#coinQueen)" stroke="#880e4f" stroke-width="0.5" />
+        </g>
 
-      <line v-if="isMyTurn && !aimLocked" :x1="ccx(st.striker)" :y1="ccy(st.striker)" :x2="aimEnd.x" :y2="aimEnd.y" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="7 5"/>
-      <circle v-if="isMyTurn && !aimLocked" :cx="aimEnd.x" :cy="aimEnd.y" r="7" fill="rgba(15,23,42,0.75)" stroke="var(--accent)" stroke-width="2"/>
-    </svg>
+        <!-- Striker -->
+        <circle :cx="ccx(st.striker)" :cy="ccy(st.striker)" :r="geo.SR*SCALE" fill="url(#strikerGrad)" stroke="#fbc02d" stroke-width="1.5" filter="url(#softShadow)" />
+
+        <!-- Aiming line -->
+        <line v-if="isMyTurn && !aimLocked" :x1="ccx(st.striker)" :y1="ccy(st.striker)" :x2="aimEnd.x" :y2="aimEnd.y" stroke="#ffeb3b" stroke-width="2" stroke-dasharray="6 4" opacity="0.8" />
+      </svg>
+    </div>
 
     <div class="controls">
       <template v-if="isMyTurn">
         <div v-if="!aimLocked" class="aim">
-          <label>{{ t('game.angle') }}<b>{{ Math.round(angle*180/Math.PI) }}°</b></label>
-          <input type="range" min="0" :max="Math.PI*2" step="0.02" v-model.number="angle" class="slider"/>
-          <label>{{ t('game.power') }}<b>{{ Math.round(power*100) }}%</b></label>
-          <input type="range" min="0.05" max="1" step="0.01" v-model.number="power" class="slider"/>
+          <div class="slider-row">
+            <label>{{ t('game.angle') }}</label>
+            <input type="range" min="0" :max="Math.PI*2" step="0.02" v-model.number="angle" class="slider"/>
+          </div>
+          <div class="slider-row">
+            <label>{{ t('game.power') }}</label>
+            <input type="range" min="0.05" max="1" step="0.01" v-model.number="power" class="slider"/>
+          </div>
           <button class="btn btn-primary" @click="lockAim">🎯 {{ t('game.lockAim') }}</button>
         </div>
         <button v-else class="btn btn-lg btn-primary" @click="shoot">🚀 {{ t('game.shoot') }}</button>
       </template>
-      <div v-else-if="st.shots" class="shots">🎯 {{ t('game.shots') }} {{ st.shots?.[myTeam] ?? 0 }}/{{ st.strikerLimit }}</div>
+      <div v-else class="status-msg muted">
+        {{ st.shots ? `🎯 ${t('game.shots')} ${st.shots?.[myTeam] ?? 0}/${st.strikerLimit}` : t('match.waitingTurn', {name: ''}) }}
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.carrom-view { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.hud { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.scores { display: flex; align-items: center; gap: 6px; }
-.chip { padding: 4px 10px; border-radius: 20px; font-size: 14px; font-weight: 700; }
-.chip.w { background: #f7f5ea; color: #333; }
-.chip.b { background: #2b2b30; color: #fff; }
-.chip.q { background: transparent; font-size: 16px; }
-.turn { font-size: 13px; }
+.carrom-view { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
+.hud { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 450px; }
+.scores { display: flex; gap: 8px; }
+.chip { padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.chip.w { background: #fdf5e6; color: #5d4037; }
+.chip.b { background: #3e2723; color: #fff; }
 .turn-me { background: var(--accent-grad); color: #fff; }
-.board { width: 100%; max-width: 430px; height: auto; border-radius: 18px; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
-.controls { width: 100%; max-width: 330px; display: flex; justify-content: center; }
-.aim { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-.aim label { font-size: 13px; color: var(--text-dim); display: flex; justify-content: space-between; }
-.slider { width: 100%; accent-color: var(--accent); }
-.shots { font-size: 13px; color: var(--text-dim); }
+
+.board-frame {
+  padding: 4px;
+  background: #2a1b15;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.board {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 20px;
+}
+
+.controls { width: 100%; max-width: 360px; min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
+.aim { display: flex; flex-direction: column; gap: 10px; }
+.slider-row { display: flex; align-items: center; gap: 10px; }
+.slider-row label { width: 60px; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.slider { flex: 1; accent-color: var(--accent); }
+.status-msg { font-weight: 700; text-align: center; }
 </style>

@@ -1,5 +1,6 @@
 import { db } from '../../db/index.js';
 import { gameRegistry } from '../../games/registry.js';
+import { logger } from '../../lib/logger.js';
 import { gamesService } from '../games/service.js';
 
 /**
@@ -65,31 +66,48 @@ export class MatchmakingService {
   }
 
   formMatch(gameCode, entrants, fillBots) {
-    this.queue.delete(gameCode);
-    this.clearTimer(gameCode);
-    const meta = gameRegistry.get(gameCode)?.meta;
-    const humans = entrants.slice(0, meta.maxPlayers);
+    logger.info('Matchmaking: forming match', { gameCode, entrants: entrants.length, fillBots });
+    try {
+      this.queue.delete(gameCode);
+      this.clearTimer(gameCode);
+      const meta = gameRegistry.get(gameCode)?.meta;
+      const humans = entrants.slice(0, meta.maxPlayers);
 
-    const room = this.hub.createMatchRoom({ gameCode, host: humans[0].user });
-    for (const e of humans) {
-      room.join({ ...e.user }, {});
-    }
-    // fill with bots up to min players for a full game
-    let need = meta.minPlayers - room.players.size;
-    while (need > 0) {
-      room.joinBot();
-      need--;
-    }
-    // if a 4-player game with fewer than 4, top up to max for a livelier match
-    if (meta.maxPlayers === 4 && room.players.size < 4) {
-      while (room.players.size < 4) room.joinBot();
-    }
+      const room = this.hub.createMatchRoom({ gameCode, host: humans[0].user });
+      logger.info('Matchmaking: room created', { roomCode: room.code, hostId: humans[0].user.id });
 
-    room.startMatch(room.hostId);
-    for (const e of humans) {
-      if (e.socket?.connected) {
-        e.socket.emit('matchmaking:found', { matchCode: room.match.code, roomCode: room.code });
+      for (const e of humans) {
+        room.join({ ...e.user }, {});
       }
+
+      // fill with bots up to min players for a full game
+      let need = meta.minPlayers - room.players.size;
+      while (need > 0) {
+        logger.info('Matchmaking: adding bot', { roomCode: room.code, need });
+        room.joinBot();
+        need--;
+      }
+      // if a 4-player game with fewer than 4, top up to max for a livelier match
+      if (meta.maxPlayers === 4 && room.players.size < 4) {
+        while (room.players.size < 4) {
+          logger.info('Matchmaking: adding extra bot for 4-player game', { roomCode: room.code });
+          room.joinBot();
+        }
+      }
+
+      room.startMatch(room.hostId);
+      logger.info('Matchmaking: match started', { roomCode: room.code, matchCode: room.match.code });
+
+      for (const e of humans) {
+        if (e.socket?.connected) {
+          logger.info('Matchmaking: emitting found', { userId: e.user.id, roomCode: room.code });
+          e.socket.emit('matchmaking:found', { matchCode: room.match.code, roomCode: room.code });
+        } else {
+          logger.warn('Matchmaking: socket disconnected, cannot emit found', { userId: e.user.id });
+        }
+      }
+    } catch (err) {
+      logger.error('Matchmaking: failed to form match', { gameCode, error: err.message, stack: err.stack });
     }
   }
 }

@@ -894,6 +894,27 @@ textarea {
 }
 
 /* ============ Room / match chrome ============ */
+.game-perspective {
+  perspective: 1200px;
+  perspective-origin: center -100px;
+  padding: 10px 0 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: visible;
+}
+
+.game-3d-tilt {
+  transform: rotateX(22deg) scale(0.96);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 15px 45px rgba(0, 0, 0, 0.4));
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.game-3d-tilt:hover {
+  transform: rotateX(18deg) scale(0.98);
+}
+
 .game-stage {
   display: grid;
   gap: 14px;

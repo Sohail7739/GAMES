@@ -55,7 +55,7 @@ function logout() {
           <span class="spinner" style="width: 16px; height: 16px" />
         </button>
         <div class="mini-avatar" :title="auth.user?.username || ''" @click="go('profile')">
-          {{ auth.user?.id?.charCodeAt(0) % 2 === 0 ? '👨' : '👩' }}
+          {{ (Number(auth.user?.id) || 0) % 2 === 0 ? '👨' : '👩' }}
         </div>
       </div>
     </header>

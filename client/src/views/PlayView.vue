@@ -58,11 +58,12 @@ function playAgain() {
   games.queue(code.value);
 }
 
-const myResult = computed(() => {
-  if (!room.finished) return null;
-  return room.finished.results.find((r) => r.seat === room.mySeat);
-});
 const won = computed(() => myResult.value?.result === 'win');
+
+// Debug
+watch([() => room.room, () => room.matchState, () => isMM.value], ([r, ms, mm]) => {
+  console.log('PlayView State:', { hasRoom: !!r, hasMatch: !!ms, isMM: mm });
+}, { immediate: true });
 </script>
 
 <template>
@@ -72,6 +73,13 @@ const won = computed(() => myResult.value?.result === 'win');
       <h2 style="font-weight: 800">{{ t('game.quickMatch') }}</h2>
       <p class="muted mt-8">{{ t('game.quickMatchSub') }}</p>
       <button class="btn btn-danger mt-24" @click="cancelMM">{{ t('common.cancel') }}</button>
+    </div>
+
+    <div v-else-if="room.error" class="center mt-24" style="padding-top: 12vh">
+      <span class="big-emo">⚠️</span>
+      <h2 style="font-weight: 800">{{ t('common.error') }}</h2>
+      <p class="muted mt-8">{{ room.error }}</p>
+      <button class="btn btn-primary mt-24" @click="leaveMatch">{{ t('common.back') }}</button>
     </div>
 
     <div v-else-if="!room.room && !room.matchState" class="loader"><span class="spinner" /> {{ t('common.loading') }}</div>
@@ -104,7 +112,7 @@ const won = computed(() => myResult.value?.result === 'win');
           class="seat"
           :class="{ active: p.seat === room.matchState?.meta?.currentSeat && room.matchState?.meta?.status === 'running' }"
         >
-          <span class="s-emo">{{ p.id?.charCodeAt(0) % 2 === 0 ? '👨' : '👩' }}</span>
+          <span class="s-emo">{{ (Number(p.id) || 0) % 2 === 0 ? '👨' : '👩' }}</span>
           <span>{{ p.username }}<span v-if="p.id === auth.user?.id"> ({{ t('room.you') }})</span></span>
           <span v-if="p.seat === room.mySeat && room.matchState?.meta?.status !== 'running'" style="color: var(--red)">●</span>
         </div>
@@ -112,7 +120,9 @@ const won = computed(() => myResult.value?.result === 'win');
 
       <div v-if="room.announces.length" class="ticker mb-16">{{ room.announces[room.announces.length - 1].text }}</div>
 
-      <component :is="gameView" v-if="gameView" />
+      <div class="game-perspective">
+        <component :is="gameView" v-if="gameView" class="game-3d-tilt" />
+      </div>
 
       <div v-if="room.finished" class="result-overlay">
         <div class="result-card">

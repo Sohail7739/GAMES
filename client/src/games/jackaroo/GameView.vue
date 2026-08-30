@@ -133,6 +133,7 @@ const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b'];
   gap: 20px;
   align-items: center;
   width: 100%;
+  transform-style: preserve-3d;
 }
 
 .board-container {
@@ -141,8 +142,10 @@ const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b'];
   height: 320px;
   background: var(--bg-elev);
   border-radius: 50%;
-  border: 4px solid var(--border-strong);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 40px rgba(168, 85, 247, 0.1);
+  border: 12px solid #5a3c22;
+  box-shadow:
+    0 25px 60px rgba(0,0,0,0.6),
+    inset 0 0 40px rgba(168, 85, 247, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -204,13 +207,14 @@ const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b'];
   height: 16px;
   border-radius: 50%;
   border: 2px solid #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
   font-size: 9px;
   font-weight: bold;
   color: #fff;
   display: grid;
   place-items: center;
   z-index: 5;
+  transform: translateZ(5px);
 }
 
 /* Player Controls */

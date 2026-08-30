@@ -60,6 +60,7 @@ export class RealtimeHub {
 
     socket.on('disconnect', () => {
       presenceHub.removeSocket(user.id, socket);
+      this.matchmaking.cancel(user.id);
       const room = this.roomForSocket(socket);
       if (room) {
         room.removeSocket(socket);
@@ -86,8 +87,10 @@ export class RealtimeHub {
       isPrivate: !!row.is_private,
       password: row.password || '',
       hostId: row.host_id,
+      status: row.status,
       settings: JSON.parse(row.settings || '{}'),
       io: this.io,
+      onClose: (c) => this.rooms.delete(c),
     });
     this.rooms.set(code, session);
     return session;
@@ -111,6 +114,7 @@ export class RealtimeHub {
       hostId: host.id,
       settings: game.config || {},
       io: this.io,
+      onClose: (c) => this.rooms.delete(c),
     });
     this.rooms.set(code, session);
     return session;
@@ -118,19 +122,26 @@ export class RealtimeHub {
 
   // Handlers -------------------------------------------------------------
   handleRoomJoin(socket, { code, password } = {}) {
+    logger.info('Room: join request', { code, userId: socket.data.user.id });
     try {
       const room = this.ensureRoomSession(code);
-      if (!room) return socket.emit('room:error', { message: 'ROOM_NOT_FOUND' });
+      if (!room) {
+        logger.warn('Room: join failed - not found', { code });
+        return socket.emit('room:error', { message: 'ROOM_NOT_FOUND' });
+      }
       const user = { id: socket.data.user.id, username: socket.data.user.username, avatar: socket.data.user.avatar, is_bot: false };
       room.addSocket(socket);
       if (room.status === 'playing') {
+        logger.info('Room: join success (reconnect to playing)', { code, userId: user.id });
         socket.emit('room:joined', { room: room.snapshot() });
         return;
       }
       room.join(user, { password });
+      logger.info('Room: join success', { code, userId: user.id });
       socket.emit('room:joined', { room: room.snapshot() });
       room.pushUpdate();
     } catch (err) {
+      logger.error('Room: join failed', { code, error: err.message });
       socket.emit('room:error', { message: err.message || 'JOIN_FAILED' });
     }
   }

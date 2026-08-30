@@ -81,24 +81,30 @@ export const useRoomStore = defineStore('room', {
             break;
           }
           case 'room:joined':
+            console.log('Room: joined', payload);
             this.room = payload.room;
             this.joined = true;
             this.finished = null;
             if (payload.room.matchCode) this.joinMatch(payload.room.matchCode);
             break;
           case 'room:update':
+            console.log('Room: update', payload);
             this.room = payload.room;
             break;
           case 'room:started':
+            console.log('Room: started', payload);
             this.joinMatch(payload.matchCode);
             break;
           case 'room:closed':
+            console.log('Room: closed');
             if (this.joined) this.reset();
             break;
           case 'room:left':
+            console.log('Room: left');
             this.reset();
             break;
           case 'room:error':
+            console.error('Room: error', payload);
             this.error = payload.message;
             break;
           case 'room:chat':
@@ -106,6 +112,7 @@ export const useRoomStore = defineStore('room', {
             if (this.chat.length > 80) this.chat.shift();
             break;
           case 'match:state': {
+            console.log('Match: state', payload);
             this.matchState = payload;
             this.matchCode = this.matchCode || payload.meta?.code;
             const auth = useAuthStore();
@@ -126,6 +133,7 @@ export const useRoomStore = defineStore('room', {
             this.finished = payload;
             break;
           case 'matchmaking:found':
+            console.log('Matchmaking: found', payload);
             this.queuedFor = null;
             this.joinRoom(payload.roomCode);
             break;

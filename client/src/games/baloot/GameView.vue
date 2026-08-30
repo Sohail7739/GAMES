@@ -57,15 +57,15 @@ const posClasses = ['pos-bottom', 'pos-right', 'pos-top', 'pos-left'];
     
     <!-- Scoreboard Header -->
     <div class="scoreboard">
-      <div class="score-team">Team 1: <span>{{ st.value.scores?.[0] ?? 0 }}</span></div>
-      <div class="target-score">Target: {{ st.value.targetScore }}</div>
-      <div class="score-team">Team 2: <span>{{ st.value.scores?.[1] ?? 0 }}</span></div>
+      <div class="score-team">Team 1: <span>{{ st.scores?.[0] ?? 0 }}</span></div>
+      <div class="target-score">Target: {{ st.targetScore }}</div>
+      <div class="score-team">Team 2: <span>{{ st.scores?.[1] ?? 0 }}</span></div>
     </div>
 
     <!-- Bidding Phase Overlay -->
     <div v-if="phase === 'bidding'" class="bidding-panel">
-      <div v-if="st.value.highestBid" class="current-bid">
-        Highest Bid: {{ st.value.highestBid.sun ? '🌞 Sun' : st.value.highestBid.suit }}
+      <div v-if="st.highestBid" class="current-bid">
+        Highest Bid: {{ st.highestBid.sun ? '🌞 Sun' : st.highestBid.suit }}
       </div>
       
       <div v-if="isMyTurn" class="bid-actions">
@@ -86,11 +86,11 @@ const posClasses = ['pos-bottom', 'pos-right', 'pos-top', 'pos-left'];
     <!-- Game Table -->
     <div class="game-table" v-if="phase === 'playing' || phase === 'bidding'">
       <div class="felt-surface">
-        <div class="led-suit" v-if="st.value.ledSuit">Led: {{ SUIT_EMOJI[st.value.ledSuit] }}</div>
+        <div class="led-suit" v-if="st.ledSuit">Led: {{ SUIT_EMOJI[st.ledSuit] }}</div>
         
         <!-- Center Trick Area -->
-        <div class="trick-center" v-if="st.value.table">
-          <div v-for="c in st.value.table" :key="c.seat" 
+        <div class="trick-center" v-if="st.table">
+          <div v-for="c in st.table" :key="c.seat"
                class="rich-card trick-card"
                :class="posClasses[getSeatPosition(c.seat)]"
                :style="{ color: getSuitColor(c.card.suit) }">
@@ -219,12 +219,15 @@ const posClasses = ['pos-bottom', 'pos-right', 'pos-top', 'pos-left'];
   height: 350px;
   background: radial-gradient(circle, #2a5a3b 0%, #11381f 100%);
   border-radius: 120px;
-  border: 8px solid #5a3c22;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.6), inset 0 0 50px rgba(0,0,0,0.8);
+  border: 14px solid #5a3c22;
+  box-shadow:
+    0 25px 70px rgba(0,0,0,0.65),
+    inset 0 0 60px rgba(0,0,0,0.85);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  transform-style: preserve-3d;
 }
 
 .led-suit {
@@ -312,6 +315,7 @@ const posClasses = ['pos-bottom', 'pos-right', 'pos-top', 'pos-left'];
   justify-content: center;
   gap: -30px;
   perspective: 1000px;
+  transform: translateZ(50px);
 }
 
 .hand-card {
@@ -339,10 +343,10 @@ const posClasses = ['pos-bottom', 'pos-right', 'pos-top', 'pos-left'];
   box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
 }
 
-.pos-bottom { transform: translate(0, 30px) rotate(5deg); z-index: 4; }
-.pos-right { transform: translate(45px, 0) rotate(85deg); z-index: 3; }
-.pos-top { transform: translate(0, -30px) rotate(-5deg); z-index: 2; }
-.pos-left { transform: translate(-45px, 0) rotate(-85deg); z-index: 1; }
+.pos-bottom { transform: translate(0, 30px) rotate(5deg) translateZ(10px); z-index: 4; }
+.pos-right { transform: translate(45px, 0) rotate(85deg) translateZ(10px); z-index: 3; }
+.pos-top { transform: translate(0, -30px) rotate(-5deg) translateZ(10px); z-index: 2; }
+.pos-left { transform: translate(-45px, 0) rotate(-85deg) translateZ(10px); z-index: 1; }
 
 @keyframes pulse {
   from { opacity: 0.5; }
